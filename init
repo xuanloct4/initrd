@@ -52,22 +52,22 @@ do_mount_root()
    else
        echo "Successfully mounted device $root"
 	   
-	   # mkdir /mnt/sdb1
-	   # echo "mount $device on /mnt/sdb1"
-	   # mount $device /mnt/sdb1
-	   echo "Content of /.root : "
-	   ls /.root
-	   mkdir /.sfs
-	   echo "mount $device/sdc1.sfs on /.sfs"
-	   if ! mount /.root/sdc1.sfs /.sfs -t squashfs -o loop ; then
-	       no_mount /.root/sdc1.sfs 
-	       cat /proc/partitions
-	       while true ; do sleep 10000 ; done
-		else
-	    	echo "Successfully mounted $device/sdc1.sfs"
-			echo "Content of /.sfs : "
-			ls /.sfs -a
-		fi
+ # 	   # mkdir /mnt/sdb1
+ # 	   # echo "mount $device on /mnt/sdb1"
+ # 	   # mount $device /mnt/sdb1
+ # 	   echo "Content of /.root : "
+ # 	   ls /.root
+ # 	   mkdir /.sfs
+ # 	   echo "mount $device/sdc1.sfs on /.sfs"
+ # 	   if ! mount /.root/sdc1.sfs /.sfs -t squashfs -o loop ; then
+ # 	       no_mount /.root/sdc1.sfs
+ # 	       cat /proc/partitions
+ # 	       while true ; do sleep 10000 ; done
+ # 		else
+ # 	    	echo "Successfully mounted $device/sdc1.sfs"
+ # 			echo "Content of /.sfs : "
+ # 			ls /.sfs -a
+ # 		fi
    fi
 }
 
@@ -123,7 +123,7 @@ do_mount_root
 
 killall -w ${UDEVD##*/}
 
-exec switch_root /.sfs "$init" "$@"
-# exec switch_root /.root "$init" "$@"
+# exec switch_root /.sfs "$init" "$@"
+exec switch_root /.root "$init" "$@"
 
 

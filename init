@@ -51,10 +51,6 @@ do_mount_root()
        while true ; do sleep 10000 ; done
    else
        echo "Successfully mounted device $root"
-	   
-	   # mkdir /mnt/sdb1
-	   # echo "mount $device on /mnt/sdb1"
-	   # mount $device /mnt/sdb1
 	   echo "Content of /.root : "
 	   ls /.root
 	   mkdir /.sfs

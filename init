@@ -3,6 +3,26 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 export PATH
 
+init=/sbin/init
+root=
+rootdelay=
+rootfstype=auto
+ro="ro"
+rootflags=
+device=
+SWITCH_ROOT="/.overlay"
+ROOT_INIT_RAM="/.root"
+DEV_ROOT="$ROOT_INIT_RAM/dev"
+SDB_ROOT="$DEV_ROOT/sdb1"
+SDB_ROOT_SQUASHFS="$SDB_ROOT/sdc1.sfs"
+SDB_PRE_SWITCH_ROOT_SCRIPT="$SDB_ROOT/boot/scripts/pre_switch_root.sh"
+TMPFS="/run"
+OVERLAY="$SWITCH_ROOT"
+OVERLAY_MNT="$SDB_ROOT/mnt"
+OVERLAY_WORK_DIR="$SDB_ROOT/mnt/workdir/"
+OVERLAY_UPPER="$SDB_ROOT/mnt/upper/"
+OVERLAY_LOWER="/.squashfs"
+
 problem()
 {
    printf "Encountered a problem!\n\nDropping you to a shell.\n\n"
@@ -27,8 +47,19 @@ no_mount()
 }
 
 do_mount_root()
-{
-   mkdir /.root
+{   
+	if ! [ -d "$ROOT_INIT_RAM" ]; then
+		mkdir $ROOT_INIT_RAM
+	fi
+   
+	if ! [ -d "$DEV_ROOT" ]; then
+		mkdir $DEV_ROOT
+	fi
+	
+	if ! [ -d "$SDB_ROOT" ]; then
+		mkdir $SDB_ROOT
+	fi
+   
    [ -n "$rootflags" ] && rootflags="$rootflags,"
    rootflags="$rootflags$ro"
 
@@ -45,67 +76,17 @@ do_mount_root()
    done
 
 
-   if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" /.root ; then
+   if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" $SDB_ROOT ; then
        no_mount $device
        cat /proc/partitions
        while true ; do sleep 10000 ; done
    else
        echo "Successfully mounted device $root"
-	   
-	   # mkdir /mnt/sdb1
-	   # echo "mount $device on /mnt/sdb1"
-	   # mount $device /mnt/sdb1
-	   echo "Content of /.root : "
-	   ls /.root
-	   
-	   if ! [ -d "/mnt/lower" ]; then
-		 mkdir /mnt/lower
-	   fi
-	   
-	   if ! [ -d "/mnt/upper" ]; then
-	     mkdir /mnt/upper
-	   fi
-	   
-	   if ! [ -d "/mnt/workdir" ]; then
-	     mkdir /mnt/workdir
-	   fi
-	   
-	   if ! [ -d "/mnt/overlay" ]; then
-	     mkdir /mnt/overlay
-	   fi
-
-	   echo "mount $device/sdc1.sfs on /mnt/lower"
-	   if ! mount /.root/sdc1.sfs /mnt/lower -t squashfs -o loop ; then
-	       no_mount /.root/sdc1.sfs 
-	       cat /proc/partitions
-	       while true ; do sleep 10000 ; done
-		else
-	    	echo "Successfully mounted $device/sdc1.sfs"
-			echo "Content of /mnt/lower : "
-			ls /mnt/lower -a
-			
-			echo "overlay   /mnt/overlay    overlay   defaults,lowerdir=/mnt/lower,upperdir=/mnt/upper,workdir=/mnt/workdir    0   2" >> /etc/fstab
-			umount overlay
-			mount -t overlay  -o lowerdir=/mnt/lower/,upperdir=/mnt/upper/,workdir=/mnt/workdir/ overlay
-			
-			echo "\n"
-			echo "Content of /mnt/upper : "
-			ls /mnt/upper -a
-			
-			echo "\n"
-			echo "Content of /mnt/workdir : "
-			ls /mnt/workdir -a
-		fi
+       echo "Content of $SDB_ROOT : "
+       ls $SDB_ROOT -a  
+       sh $SDB_PRE_SWITCH_ROOT_SCRIPT
    fi
 }
-
-init=/sbin/init
-root=
-rootdelay=
-rootfstype=auto
-ro="ro"
-rootflags=
-device=
 
 mount -n -t devtmpfs devtmpfs /dev
 mount -n -t proc     proc     /proc
@@ -150,9 +131,6 @@ if [ -n "$rootdelay"    ] ; then sleep "$rootdelay"              ; fi
 do_mount_root
 
 killall -w ${UDEVD##*/}
-
-exec switch_root /mnt/overlay "$init" "$@"
-# exec switch_root /.sfs "$init" "$@"
-# exec switch_root /.root "$init" "$@"
+exec switch_root $SWITCH_ROOT "$init" "$@"
 
 

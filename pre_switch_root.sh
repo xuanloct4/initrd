@@ -5,7 +5,7 @@ echo "Pre Switch Root"
 SWITCH_ROOT="/.overlay"
 ROOT_INIT_RAM="/.root"
 DEV_ROOT="$ROOT_INIT_RAM/dev"
-SDB_ROOT="$DEV_ROOT/sdb1"
+SDB_ROOT="$SWITCH_ROOT"
 SDB_ROOT_SQUASHFS="$SDB_ROOT/sdc1.sfs"
 SDB_PRE_SWITCH_ROOT_SCRIPT="$SDB_ROOT/boot/scripts/pre_switch_root.sh"
 TMPFS="/run"
@@ -67,44 +67,5 @@ if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" $SDB_ROOT ; then
 else
     echo "Successfully mounted device $root"
     echo "Content of $SDB_ROOT : "
-    ls $SDB_ROOT -a  
-    
-echo "mount $SDB_ROOT_SQUASHFS on $OVERLAY_LOWER"
-                   if ! mount $SDB_ROOT_SQUASHFS $OVERLAY_LOWER -t squashfs -o loop ; then
-                       no_mount $SDB_ROOT_SQUASHFS
-                       cat /proc/partitions
-                       while true ; do sleep 10000 ; done
-                        else
-                        echo "Successfully mounted $SDB_ROOT_SQUASHFS"
-                                echo "Content of $OVERLAY_LOWER : "
-                                ls $OVERLAY_LOWER -a
-
-                                if [ ! -f "/etc/fstab" ]; then
-                                        echo "" >> /etc/fstab
-                                fi
-
-                                echo "upper     $OVERLAY_UPPER         swap     defaults              0     0" >> /etc/fstab
-                                echo "workdir     $OVERLAY_WORK_DIR         swap     defaults              0     0" >> /etc/fstab
-                                echo "overlay   $OVERLAY    overlay   defaults,lowerdir=$OVERLAY_LOWER,upperdir=$OVERLAY_UPPER,workdir=$OVERLAY_WORK_DIR    0   2" >> /etc/fstab
-
-                                mount -n -t swap     upper     $OVERLAY_UPPER
-                                mount -n -t swap     workdir     $OVERLAY_WORK_DIR
-                                mount
-                                echo "Mount overlay"
-                                # umount overlay
-                                mount -t overlay  -o lowerdir=$OVERLAY_LOWER,upperdir=$OVERLAY_UPPER,workdir=$OVERLAY_WORK_DIR $OVERLAY
-                                #sleep 5
-
-                                echo "\n"
-                                echo "Content of $OVERLAY_UPPER : "
-                                ls $OVERLAY_UPPER -a
-
-                                echo "\n"
-                                echo "Content of $OVERLAY_WORK_DIR : "
-                                ls $OVERLAY_WORK_DIR -a
-
-                                echo "\n"
-                                echo "Content of $OVERLAY : "
-                                ls $OVERLAY -a
-                        fi
+    ls $SDB_ROOT -a
 fi

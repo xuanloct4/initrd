@@ -3,6 +3,26 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 export PATH
 
+init=/sbin/init
+root=
+rootdelay=
+rootfstype=auto
+ro="ro"
+rootflags=
+device=
+SWITCH_ROOT="/.overlay"
+ROOT_INIT_RAM="/.root"
+DEV_ROOT="$ROOT_INIT_RAM/dev"
+SDB_ROOT="$DEV_ROOT/sdb1"
+SDB_ROOT_SQUASHFS="$SDB_ROOT/sdc1.sfs"
+SDB_PRE_SWITCH_ROOT_SCRIPT="$SDB_ROOT/boot/scripts/pre_switch_root.sh"
+TMPFS="/run"
+OVERLAY="$SWITCH_ROOT"
+OVERLAY_MNT="$SDB_ROOT/mnt"
+OVERLAY_WORK_DIR="$SDB_ROOT/mnt/workdir/"
+OVERLAY_UPPER="$SDB_ROOT/mnt/upper/"
+OVERLAY_LOWER="/.squashfs"
+
 problem()
 {
    printf "Encountered a problem!\n\nDropping you to a shell.\n\n"
@@ -27,8 +47,19 @@ no_mount()
 }
 
 do_mount_root()
-{
-   mkdir /.root
+{   
+	if ! [ -d "$ROOT_INIT_RAM" ]; then
+		mkdir $ROOT_INIT_RAM
+	fi
+   
+	if ! [ -d "$DEV_ROOT" ]; then
+		mkdir $DEV_ROOT
+	fi
+	
+	if ! [ -d "$SDB_ROOT" ]; then
+		mkdir $SDB_ROOT
+	fi
+   
    [ -n "$rootflags" ] && rootflags="$rootflags,"
    rootflags="$rootflags$ro"
 
@@ -45,35 +76,17 @@ do_mount_root()
    done
 
 
-   if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" /.root ; then
+   if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" $SDB_ROOT ; then
        no_mount $device
        cat /proc/partitions
        while true ; do sleep 10000 ; done
    else
        echo "Successfully mounted device $root"
-	   echo "Content of /.root : "
-	   ls /.root
-	   mkdir /.sfs
-	   echo "mount $device/sdc1.sfs on /.sfs"
-	   if ! mount /.root/sdc1.sfs /.sfs -t squashfs -o loop ; then
-	       no_mount /.root/sdc1.sfs 
-	       cat /proc/partitions
-	       while true ; do sleep 10000 ; done
-		else
-	    	echo "Successfully mounted $device/sdc1.sfs"
-			echo "Content of /.sfs : "
-			ls /.sfs -a
-		fi
+       echo "Content of $SDB_ROOT : "
+       ls $SDB_ROOT -a  
+       sh $SDB_PRE_SWITCH_ROOT_SCRIPT
    fi
 }
-
-init=/sbin/init
-root=
-rootdelay=
-rootfstype=auto
-ro="ro"
-rootflags=
-device=
 
 mount -n -t devtmpfs devtmpfs /dev
 mount -n -t proc     proc     /proc
@@ -118,8 +131,6 @@ if [ -n "$rootdelay"    ] ; then sleep "$rootdelay"              ; fi
 do_mount_root
 
 killall -w ${UDEVD##*/}
-
-exec switch_root /.sfs "$init" "$@"
-# exec switch_root /.root "$init" "$@"
+exec switch_root $SWITCH_ROOT "$init" "$@"
 
 

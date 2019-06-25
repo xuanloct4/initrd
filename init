@@ -48,18 +48,6 @@ no_mount()
 
 do_mount_root()
 {   
-	if ! [ -d "$ROOT_INIT_RAM" ]; then
-		mkdir $ROOT_INIT_RAM
-	fi
-   
-	if ! [ -d "$DEV_ROOT" ]; then
-		mkdir $DEV_ROOT
-	fi
-	
-	if ! [ -d "$SDB_ROOT" ]; then
-		mkdir $SDB_ROOT
-	fi
-   
    [ -n "$rootflags" ] && rootflags="$rootflags,"
    rootflags="$rootflags$ro"
 
@@ -75,17 +63,7 @@ do_mount_root()
        problem
    done
 
-
-   if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" $SDB_ROOT ; then
-       no_mount $device
-       cat /proc/partitions
-       while true ; do sleep 10000 ; done
-   else
-       echo "Successfully mounted device $root"
-       echo "Content of $SDB_ROOT : "
-       ls $SDB_ROOT -a  
-       sh $SDB_PRE_SWITCH_ROOT_SCRIPT
-   fi
+   sh $SDB_PRE_SWITCH_ROOT_SCRIPT
 }
 
 mount -n -t devtmpfs devtmpfs /dev

@@ -22,6 +22,19 @@ OVERLAY_UPPER="$SDB_ROOT/mnt/upper/"
 
 OVERLAY_LOWER="/.squashfs"
 
+
+if ! [ -d "$ROOT_INIT_RAM" ]; then
+	mkdir $ROOT_INIT_RAM
+fi
+
+if ! [ -d "$DEV_ROOT" ]; then
+	mkdir $DEV_ROOT
+fi
+
+if ! [ -d "$SDB_ROOT" ]; then
+	mkdir $SDB_ROOT
+fi
+
 if ! [ -d "$SWITCH_ROOT" ]; then
 	mkdir $SWITCH_ROOT
 fi
@@ -46,6 +59,16 @@ if ! [ -d "$OVERLAY_LOWER" ]; then
 	mkdir $OVERLAY_LOWER
 fi
 
+
+if ! mount -n -t "$rootfstype" -o "$rootflags" "$device" $SDB_ROOT ; then
+    no_mount $device
+    cat /proc/partitions
+    while true ; do sleep 10000 ; done
+else
+    echo "Successfully mounted device $root"
+    echo "Content of $SDB_ROOT : "
+    ls $SDB_ROOT -a  
+    
 echo "mount $SDB_ROOT_SQUASHFS on $OVERLAY_LOWER"
                    if ! mount $SDB_ROOT_SQUASHFS $OVERLAY_LOWER -t squashfs -o loop ; then
                        no_mount $SDB_ROOT_SQUASHFS
@@ -84,3 +107,4 @@ echo "mount $SDB_ROOT_SQUASHFS on $OVERLAY_LOWER"
                                 echo "Content of $OVERLAY : "
                                 ls $OVERLAY -a
                         fi
+fi

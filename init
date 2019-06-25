@@ -82,6 +82,7 @@ for param in $cmdline ; do
     rootflags=* ) rootflags=${param#rootflags=}   ;;
     ro          ) ro="ro"                         ;;
     rw          ) ro="rw"                         ;;
+    preloadscript=*      ) SDB_PRE_SWITCH_ROOT_SCRIPT=${param#preloadscript=}             ;;
   esac
 done
 
